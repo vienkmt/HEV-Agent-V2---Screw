@@ -17,6 +17,9 @@ using System.Net;
 using System.Threading.Tasks;
 using System.Threading;
 using Microsoft.Win32;
+using Newtonsoft.Json;
+using System.Net.NetworkInformation;
+using System.Net.Sockets;
 
 namespace HEV_Agent_V2
 {
@@ -29,10 +32,11 @@ namespace HEV_Agent_V2
         MqttClient client = null;
         string clientId = "";
         bool active = true;
+        bool exit = false;
         RegistryKey HevAgent = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
         string LogsPath = "";
         string ServerIp = "";
-        string Note = "";
+        string Note = "";string Ip = "1.1.1.2";
 
         public frmAgentScrew()
         {
@@ -41,9 +45,9 @@ namespace HEV_Agent_V2
             ServerIp = Properties.Settings.Default.Server;
             Note = Properties.Settings.Default.Note;
 
-           
 
-            DtSet = new System.Data.DataSet();
+
+             DtSet = new System.Data.DataSet();
             TbMachine = DtSet.Tables.Add("Lineeee");
             InitializeComponent();
             BasicConfigurator.Configure();
@@ -59,37 +63,47 @@ namespace HEV_Agent_V2
 
             TbMachine = DtSet.Tables.Add("Machine");
                  
-            TbMachine.Columns.Add("Stt", typeof(System.String));
             TbMachine.Columns.Add("LastTime", typeof(System.String));
             TbMachine.Columns.Add("Name", typeof(System.String));
-            TbMachine.Columns.Add("Status", typeof(System.String));
+            TbMachine.Columns.Add("Status", typeof(System.Int32));
             TbMachine.Columns.Add("ErrorCode", typeof(System.String));
+            TbMachine.Columns.Add("Note", typeof(System.String));
+            TbMachine.Columns.Add("Ip", typeof(System.String));
 
             radGridView1.DataSource = TbMachine;
-            this.radGridView1.MasterTemplate.Columns[0].Width = 50;
-            this.radGridView1.MasterTemplate.Columns[1].Width = 150;
-            this.radGridView1.MasterTemplate.Columns[2].Width = 120;
-            this.radGridView1.MasterTemplate.Columns[3].Width = 100;
+            this.radGridView1.MasterTemplate.Columns[0].Width = 150;
+            this.radGridView1.MasterTemplate.Columns[1].Width = 120;
+            this.radGridView1.MasterTemplate.Columns[2].Width = 100;
+            this.radGridView1.MasterTemplate.Columns[3].Width = 120;
             this.radGridView1.MasterTemplate.Columns[4].Width = 120;
-        
+            this.radGridView1.MasterTemplate.Columns[5].Width = 120;
+
+
             this.radGridView1.TableElement.RowHeight = 30;
             this.radGridView1.TableElement.TableHeaderHeight = 40;
 
+            try 
+            {
+                Ip = GetLocalIPAddress();
+            }
+            catch { }
 
             //Khởi động cùng windows
             HevAgent.DeleteValue("HEV_Agent", false);
             HevAgent.SetValue("HEV_Agent", Application.ExecutablePath);
 
+            txtLogPath.Text = LogsPath;
+            txtServer.Text = ServerIp;
+            txtNote.Text = Note;
+
+
             //Lấy setting
             //Ẩn vẫn chạy
+
+
+
             //Build json gửi lên server
             //Nếu server gọi thì trả lời
-
-
-
-
-
-
 
 
         }
@@ -105,27 +119,26 @@ namespace HEV_Agent_V2
                 string[] ThongTin = FileName.Split(',');
                 string Ten = ThongTin[5].Trim();
                 string Code = ThongTin[2].Trim();
+                string d = DateTime.Now.ToString();
+                int stt = 0;
                 bool co = false;
                 
+                if (Code == "9001" || Code == "9002" || Code == "9003" || Code == "9004")
+                    stt = 1;
+
+
 
                 foreach (DataRow row in TbMachine.Rows)
                 {
                     //Nếu có rồi thì update vào hàng đó
-                    if (row[2].ToString()==Ten)
+                    if (row["Name"].ToString()==Ten)
                     {
-                        row["LastTime"]= DateTime.Now.ToString();
+                        row["LastTime"] = d;
                         row["ErrorCode"] = Code;
-                        
-                        
-                        if (Code == "9001" || Code == "9002" || Code == "9003" || Code == "9004")
-                            row["Status"] = "1";
-                        else
-                            row["Status"] = "0";
-
-
-                        Console.WriteLine("Đã có");
+                        row["Status"] = stt;
+                        Console.WriteLine("Đã có trong csdl, update thôi");
                         co = true;
-                        return;
+                        
                     }
 
                 }
@@ -134,15 +147,35 @@ namespace HEV_Agent_V2
                 if (!co)
                 {
                     var hang = TbMachine.NewRow();
-                    hang["LastTime"] = DateTime.Now.ToString();
+                    hang["LastTime"] = d;
                     hang["Name"] = Ten;
+                    hang["Status"] = stt;
                     hang["ErrorCode"] = Code;
-                    if(Code=="9001" || Code == "9002" || Code == "9003" || Code == "9004")
-                        hang["Status"] = "1";
-                    else
-                        hang["Status"] = "0";
+                    hang["Note"] = Note;
+                    hang["Ip"] = Ip;
+
                     TbMachine.Rows.Add(hang);
                 }
+
+                //Dù sao đi chăng nữa thì cũng Pub lên server thôi mà Man
+                //Build Json rồi Pub lên kênh
+                if (client.IsConnected)
+                {
+                    //client.Publish("hev",);
+
+                    //[{"LastTime":"17-Nov-20 5:32:10 PM","Name":"COM101","Status":0,"ErrorCode":"SV6H3110"}]
+
+                    string abc= "[{\"LastTime\":\""+d+"\",\"Name\":\""+Ten+"\",\"Status\":"+stt+",\"ErrorCode\":\""+Code+ "\",\"Note\":\"" + Note + "\",\"Ip\":\"" + Ip + "\"}]";
+                    //string data = TbToJson(TbMachine);
+                    client.Publish("hev", Encoding.UTF8.GetBytes(abc), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
+                    Debug.WriteLine("Vừa pub dữ liệu lẻ lên server đó a");
+
+                }
+                else
+                {
+                    //Debug.WriteLine("K kết nối tới server");
+                    log.Error("C160. Khong Publish du lieu len Server duoc");
+                }    
 
 
             }
@@ -161,7 +194,25 @@ namespace HEV_Agent_V2
 
         }
 
+        public static string GetLocalIPAddress()
+        {
+            var host = Dns.GetHostEntry(Dns.GetHostName());
+            foreach (var ip in host.AddressList)
+            {
+                if (ip.AddressFamily == AddressFamily.InterNetwork)
+                {
+                    return ip.ToString();
+                }
+            }
+            throw new Exception("No network adapters with an IPv4 address in the system!");
+        }
 
+        public string TbToJson(DataTable table)
+        {
+            string JSONString = string.Empty;
+            JSONString = JsonConvert.SerializeObject(table);
+            return JSONString;
+        }
 
         private void fileSystemWatcher1_Created(object sender, System.IO.FileSystemEventArgs e)
         {
@@ -169,10 +220,8 @@ namespace HEV_Agent_V2
             PhanTich(e.Name);
         }
         
-        
-        
-        
-        Font pop = new Font("Consolas", 12f, FontStyle.Bold);
+       
+        Font pop = new Font("Consolas", 11f, FontStyle.Bold);
         private void radGridView1_ViewCellFormatting(object sender, CellFormattingEventArgs e)
         {
             GridHeaderCellElement cell = e.CellElement as GridHeaderCellElement;
@@ -208,17 +257,29 @@ namespace HEV_Agent_V2
 
 
             backgroundWorker1.RunWorkerAsync();
+
         }
 
         //Nhận tin nhắn
         private void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
         {
             //Nhận
+            try { 
             string result = System.Text.Encoding.UTF8.GetString(e.Message);
-            Console.WriteLine(result);
-            //  richTextBox1.Text = DateTime.Now.ToString() + "    " + result;
 
-            //richTextBox1.Invoke(new MethodInvoker(() => { richTextBox1.Text = DateTime.Now.ToString() + "  ===  " + result; }));
+            if (result == "report")
+            {
+
+                string data = TbToJson(TbMachine);
+                client.Publish("hev", Encoding.UTF8.GetBytes(data), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
+            }
+
+            }
+            catch (Exception ex)
+            {
+                log.Error("C252. Loi phan nhan LoaLoa");
+            }
+            //string abc = "[{\"LastTime\":\"" + d + "\",\"Name\":\"" + Ten + "\",\"Status\":" + stt + ",\"ErrorCode\":\"" + Code + "\",\"Note\":\"" + Note + "\"}}]";
 
 
         }
@@ -238,7 +299,7 @@ namespace HEV_Agent_V2
         //Published
         void client_MqttMsgPublished(object sender, MqttMsgPublishedEventArgs e)
         {
-            Console.WriteLine("Published");
+            Console.WriteLine("Published: "+e.MessageId);
 
         }
       
@@ -313,7 +374,7 @@ namespace HEV_Agent_V2
                         client.Connect(clientId,
                         null, null,
                         false,
-                        MqttMsgBase.QOS_LEVEL_AT_MOST_ONCE, //aws 
+                        MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, //aws 
                         true,
                         $"hev_ngatketnoi",
                         "{\"message\":\"e abc vua bi disconnected\"}",
@@ -328,7 +389,7 @@ namespace HEV_Agent_V2
                         }
 
 
-                        string[] topic = { "hev_thongbao" };
+                        string[] topic = { "loaloa" };
                         client.Subscribe(topic, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
                     }
                     catch
@@ -347,11 +408,68 @@ namespace HEV_Agent_V2
 
         private void frmAgentScrew_FormClosing(object sender, FormClosingEventArgs e)
         {
-            e.Cancel = true;
-            notifyIcon1.Visible = true;
-            this.Hide();
+            if (exit) { 
+                client.Disconnect();
+
+            }
+
+            else {
+                e.Cancel = true;
+                notifyIcon1.Visible = true;
+                this.Hide();
+            }
 
 
+        }
+
+        private void notifyIcon1_MouseDoubleClick(object sender, MouseEventArgs e)
+        {
+            //FrmAgent.ActiveForm();
+            if (this.WindowState == FormWindowState.Normal)
+            {
+                Show();
+                this.Focus();
+
+            }
+            else if (this.WindowState == FormWindowState.Minimized)
+            {
+                Show();
+                this.WindowState = FormWindowState.Normal;
+                this.Focus();
+            }
+        }
+
+        private void btnSave_Click(object sender, EventArgs e)
+        {
+
+            if (txtPass.Text == "hev123")
+            {
+                Properties.Settings.Default.LogPath = txtLogPath.Text;
+                Properties.Settings.Default.Note = txtNote.Text;
+                Properties.Settings.Default.Server = txtServer.Text.Trim();
+                Properties.Settings.Default.Save();
+                MessageBox.Show("Save OK");
+                exit = true;
+                Application.Restart();
+
+            }
+                
+            else
+                MessageBox.Show("Sai Pass");
+        }
+
+        private void btnExit_Click(object sender, EventArgs e)
+        {
+            if (txtPass.Text == "hev123")
+            {
+                
+                exit = true;
+                Application.Exit();
+
+            }
+
+            else
+                MessageBox.Show("Sai Pass");
         }
     }
 }
