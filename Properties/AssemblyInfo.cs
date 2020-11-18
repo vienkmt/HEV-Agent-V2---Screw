@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("HEV_Agent_V2")]
+[assembly: AssemblyTitle("HEV_MQTT_SERVER")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
-[assembly: AssemblyProduct("HEV_Agent_V2")]
+[assembly: AssemblyProduct("HEV_MQTT_SERVER")]
 [assembly: AssemblyCopyright("Copyright ©  2020")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
@@ -34,4 +34,4 @@ using System.Runtime.InteropServices;
 // [assembly: AssemblyVersion("1.0.*")]
 [assembly: AssemblyVersion("1.0.0.0")]
 [assembly: AssemblyFileVersion("1.0.0.0")]
-[assembly: log4net.Config.XmlConfigurator(ConfigFile = "HEV_Agent_V2.exe.config", Watch = true)]   //For log4net 1.2.10.0
+[assembly: log4net.Config.XmlConfigurator(ConfigFile = "HEV_MQTT_SERVER.exe.config", Watch = true)]   //For log4net 1.2.10.0

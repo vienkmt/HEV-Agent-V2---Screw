@@ -1,6 +1,6 @@
 ﻿namespace HEV_Agent_V2
 {
-    partial class frmAgentScrew
+    partial class frmMqttServer
     {
         /// <summary>
         /// Required designer variable.
@@ -30,7 +30,7 @@
         {
             this.components = new System.ComponentModel.Container();
             Telerik.WinControls.UI.TableViewDefinition tableViewDefinition1 = new Telerik.WinControls.UI.TableViewDefinition();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmAgentScrew));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(frmMqttServer));
             this.telerikMetroBlueTheme1 = new Telerik.WinControls.Themes.TelerikMetroBlueTheme();
             this.radPageView1 = new Telerik.WinControls.UI.RadPageView();
             this.radPageViewPage1 = new Telerik.WinControls.UI.RadPageViewPage();
@@ -48,14 +48,15 @@
             this.radLabel4 = new Telerik.WinControls.UI.RadLabel();
             this.txtPass = new Telerik.WinControls.UI.RadTextBox();
             this.btnSave = new Telerik.WinControls.UI.RadButton();
+            this.btnExit = new Telerik.WinControls.UI.RadButton();
+            this.listBox2 = new System.Windows.Forms.ListBox();
             this.radWaitingBar1 = new Telerik.WinControls.UI.RadWaitingBar();
             this.waitingBarIndicatorElement2 = new Telerik.WinControls.UI.WaitingBarIndicatorElement();
             this.waitingBarIndicatorElement1 = new Telerik.WinControls.UI.WaitingBarIndicatorElement();
-            this.fileSystemWatcher1 = new System.IO.FileSystemWatcher();
             this.backgroundWorker1 = new System.ComponentModel.BackgroundWorker();
             this.visualStudio2012LightTheme1 = new Telerik.WinControls.Themes.VisualStudio2012LightTheme();
             this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
-            this.btnExit = new Telerik.WinControls.UI.RadButton();
+            this.backgroundWorker2 = new System.ComponentModel.BackgroundWorker();
             ((System.ComponentModel.ISupportInitialize)(this.radPageView1)).BeginInit();
             this.radPageView1.SuspendLayout();
             this.radPageViewPage1.SuspendLayout();
@@ -74,9 +75,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.radLabel4)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtPass)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.btnSave)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.radWaitingBar1)).BeginInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.btnExit)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radWaitingBar1)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this)).BeginInit();
             this.SuspendLayout();
             // 
@@ -88,13 +88,15 @@
             this.radPageView1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.radPageView1.Location = new System.Drawing.Point(0, 0);
             this.radPageView1.Name = "radPageView1";
-            this.radPageView1.SelectedPage = this.radPageViewPage2;
-            this.radPageView1.Size = new System.Drawing.Size(833, 630);
+            this.radPageView1.SelectedPage = this.radPageViewPage1;
+            this.radPageView1.Size = new System.Drawing.Size(1023, 788);
             this.radPageView1.TabIndex = 0;
             this.radPageView1.ThemeName = "TelerikMetroBlue";
+            this.radPageView1.SelectedPageChanged += new System.EventHandler(this.radPageView1_SelectedPageChanged);
             ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).ShowItemPinButton = false;
             ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).StripButtons = Telerik.WinControls.UI.StripViewButtons.None;
             ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).ShowItemCloseButton = false;
+            ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).ItemSpacing = 5;
             ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(47)))), ((int)(((byte)(46)))), ((int)(((byte)(46)))));
             ((Telerik.WinControls.UI.RadPageViewStripElement)(this.radPageView1.GetChildAt(0))).Font = new System.Drawing.Font("Consolas", 16F, System.Drawing.FontStyle.Bold);
             // 
@@ -104,7 +106,7 @@
             this.radPageViewPage1.ItemSize = new System.Drawing.SizeF(64F, 36F);
             this.radPageViewPage1.Location = new System.Drawing.Point(5, 42);
             this.radPageViewPage1.Name = "radPageViewPage1";
-            this.radPageViewPage1.Size = new System.Drawing.Size(823, 583);
+            this.radPageViewPage1.Size = new System.Drawing.Size(1013, 741);
             this.radPageViewPage1.Text = "Home";
             // 
             // panel1
@@ -113,7 +115,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(823, 583);
+            this.panel1.Size = new System.Drawing.Size(1013, 741);
             this.panel1.TabIndex = 0;
             // 
             // radGridView1
@@ -130,6 +132,7 @@
             this.radGridView1.MasterTemplate.AllowDragToGroup = false;
             this.radGridView1.MasterTemplate.AllowEditRow = false;
             this.radGridView1.MasterTemplate.EnableGrouping = false;
+            this.radGridView1.MasterTemplate.VerticalScrollState = Telerik.WinControls.UI.ScrollState.AlwaysShow;
             this.radGridView1.MasterTemplate.ViewDefinition = tableViewDefinition1;
             this.radGridView1.Name = "radGridView1";
             this.radGridView1.ReadOnly = true;
@@ -138,7 +141,7 @@
             // 
             this.radGridView1.RootElement.FocusBorderColor = System.Drawing.Color.Black;
             this.radGridView1.ShowGroupPanel = false;
-            this.radGridView1.Size = new System.Drawing.Size(823, 583);
+            this.radGridView1.Size = new System.Drawing.Size(1013, 741);
             this.radGridView1.TabIndex = 1;
             this.radGridView1.ThemeName = "VisualStudio2012Light";
             this.radGridView1.TitlePosition = Telerik.WinControls.Layouts.Dock.Left;
@@ -150,7 +153,7 @@
             this.radPageViewPage2.ItemSize = new System.Drawing.SizeF(100F, 36F);
             this.radPageViewPage2.Location = new System.Drawing.Point(5, 42);
             this.radPageViewPage2.Name = "radPageViewPage2";
-            this.radPageViewPage2.Size = new System.Drawing.Size(823, 583);
+            this.radPageViewPage2.Size = new System.Drawing.Size(1500, 743);
             this.radPageViewPage2.Text = "Setting";
             // 
             // panel2
@@ -159,7 +162,7 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 0);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(823, 583);
+            this.panel2.Size = new System.Drawing.Size(1500, 743);
             this.panel2.TabIndex = 0;
             // 
             // flowLayoutPanel1
@@ -174,12 +177,13 @@
             this.flowLayoutPanel1.Controls.Add(this.txtPass);
             this.flowLayoutPanel1.Controls.Add(this.btnSave);
             this.flowLayoutPanel1.Controls.Add(this.btnExit);
+            this.flowLayoutPanel1.Controls.Add(this.listBox2);
             this.flowLayoutPanel1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.flowLayoutPanel1.FlowDirection = System.Windows.Forms.FlowDirection.TopDown;
             this.flowLayoutPanel1.Location = new System.Drawing.Point(0, 0);
             this.flowLayoutPanel1.Name = "flowLayoutPanel1";
             this.flowLayoutPanel1.Padding = new System.Windows.Forms.Padding(20, 0, 0, 0);
-            this.flowLayoutPanel1.Size = new System.Drawing.Size(823, 583);
+            this.flowLayoutPanel1.Size = new System.Drawing.Size(1500, 743);
             this.flowLayoutPanel1.TabIndex = 4;
             // 
             // radLabel1
@@ -193,17 +197,17 @@
             // 
             // txtLogPath
             // 
-            this.txtLogPath.Font = new System.Drawing.Font("Segoe UI", 8.25F);
+            this.txtLogPath.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.txtLogPath.Location = new System.Drawing.Point(23, 32);
             this.txtLogPath.Margin = new System.Windows.Forms.Padding(3, 3, 3, 5);
             this.txtLogPath.Name = "txtLogPath";
-            this.txtLogPath.Size = new System.Drawing.Size(327, 20);
+            this.txtLogPath.Size = new System.Drawing.Size(327, 46);
             this.txtLogPath.TabIndex = 2;
             // 
             // radLabel2
             // 
             this.radLabel2.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radLabel2.Location = new System.Drawing.Point(23, 60);
+            this.radLabel2.Location = new System.Drawing.Point(23, 86);
             this.radLabel2.Name = "radLabel2";
             this.radLabel2.Size = new System.Drawing.Size(89, 23);
             this.radLabel2.TabIndex = 5;
@@ -211,16 +215,17 @@
             // 
             // txtServer
             // 
-            this.txtServer.Location = new System.Drawing.Point(23, 89);
+            this.txtServer.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtServer.Location = new System.Drawing.Point(23, 115);
             this.txtServer.Margin = new System.Windows.Forms.Padding(3, 3, 3, 5);
             this.txtServer.Name = "txtServer";
-            this.txtServer.Size = new System.Drawing.Size(327, 20);
+            this.txtServer.Size = new System.Drawing.Size(327, 46);
             this.txtServer.TabIndex = 4;
             // 
             // radLabel3
             // 
             this.radLabel3.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radLabel3.Location = new System.Drawing.Point(23, 117);
+            this.radLabel3.Location = new System.Drawing.Point(23, 169);
             this.radLabel3.Name = "radLabel3";
             this.radLabel3.Size = new System.Drawing.Size(44, 23);
             this.radLabel3.TabIndex = 7;
@@ -228,16 +233,17 @@
             // 
             // txtNote
             // 
-            this.txtNote.Location = new System.Drawing.Point(23, 146);
+            this.txtNote.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtNote.Location = new System.Drawing.Point(23, 198);
             this.txtNote.Margin = new System.Windows.Forms.Padding(3, 3, 3, 5);
             this.txtNote.Name = "txtNote";
-            this.txtNote.Size = new System.Drawing.Size(327, 20);
+            this.txtNote.Size = new System.Drawing.Size(327, 46);
             this.txtNote.TabIndex = 7;
             // 
             // radLabel4
             // 
             this.radLabel4.Font = new System.Drawing.Font("Consolas", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radLabel4.Location = new System.Drawing.Point(23, 174);
+            this.radLabel4.Location = new System.Drawing.Point(23, 252);
             this.radLabel4.Name = "radLabel4";
             this.radLabel4.Size = new System.Drawing.Size(153, 23);
             this.radLabel4.TabIndex = 9;
@@ -245,18 +251,19 @@
             // 
             // txtPass
             // 
-            this.txtPass.Location = new System.Drawing.Point(23, 203);
+            this.txtPass.Font = new System.Drawing.Font("Segoe UI", 10F);
+            this.txtPass.Location = new System.Drawing.Point(23, 281);
             this.txtPass.Margin = new System.Windows.Forms.Padding(3, 3, 3, 5);
             this.txtPass.Name = "txtPass";
             this.txtPass.PasswordChar = '●';
-            this.txtPass.Size = new System.Drawing.Size(327, 27);
+            this.txtPass.Size = new System.Drawing.Size(327, 46);
             this.txtPass.TabIndex = 6;
             this.txtPass.UseSystemPasswordChar = true;
             // 
             // btnSave
             // 
             this.btnSave.Font = new System.Drawing.Font("Consolas", 11.14286F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSave.Location = new System.Drawing.Point(23, 255);
+            this.btnSave.Location = new System.Drawing.Point(23, 352);
             this.btnSave.Margin = new System.Windows.Forms.Padding(3, 20, 3, 3);
             this.btnSave.Name = "btnSave";
             this.btnSave.Size = new System.Drawing.Size(327, 42);
@@ -265,14 +272,34 @@
             this.btnSave.ThemeName = "TelerikMetroBlue";
             this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
+            // btnExit
+            // 
+            this.btnExit.Font = new System.Drawing.Font("Consolas", 11.14286F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnExit.Location = new System.Drawing.Point(23, 417);
+            this.btnExit.Margin = new System.Windows.Forms.Padding(3, 20, 3, 3);
+            this.btnExit.Name = "btnExit";
+            this.btnExit.Size = new System.Drawing.Size(327, 42);
+            this.btnExit.TabIndex = 9;
+            this.btnExit.Text = "Close App";
+            this.btnExit.ThemeName = "TelerikMetroBlue";
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
+            // 
+            // listBox2
+            // 
+            this.listBox2.FormattingEnabled = true;
+            this.listBox2.Location = new System.Drawing.Point(23, 465);
+            this.listBox2.Name = "listBox2";
+            this.listBox2.Size = new System.Drawing.Size(150, 251);
+            this.listBox2.TabIndex = 10;
+            // 
             // radWaitingBar1
             // 
             this.radWaitingBar1.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.radWaitingBar1.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.radWaitingBar1.Location = new System.Drawing.Point(0, 630);
+            this.radWaitingBar1.Location = new System.Drawing.Point(0, 788);
             this.radWaitingBar1.Name = "radWaitingBar1";
             this.radWaitingBar1.ShowText = true;
-            this.radWaitingBar1.Size = new System.Drawing.Size(833, 36);
+            this.radWaitingBar1.Size = new System.Drawing.Size(1023, 36);
             this.radWaitingBar1.TabIndex = 1;
             this.radWaitingBar1.Text = "Try connecting to server...";
             this.radWaitingBar1.ThemeName = "TelerikMetroBlue";
@@ -290,14 +317,6 @@
             this.waitingBarIndicatorElement1.Name = "waitingBarIndicatorElement1";
             this.waitingBarIndicatorElement1.StretchHorizontally = false;
             // 
-            // fileSystemWatcher1
-            // 
-            this.fileSystemWatcher1.EnableRaisingEvents = true;
-            this.fileSystemWatcher1.Filter = "*.txt";
-            this.fileSystemWatcher1.Path = "C:\\FA\\LOG";
-            this.fileSystemWatcher1.SynchronizingObject = this;
-            this.fileSystemWatcher1.Created += new System.IO.FileSystemEventHandler(this.fileSystemWatcher1_Created);
-            // 
             // backgroundWorker1
             // 
             this.backgroundWorker1.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker1_DoWork);
@@ -305,40 +324,32 @@
             // notifyIcon1
             // 
             this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
-            this.notifyIcon1.Text = "HEV SCREW AGENT V2";
+            this.notifyIcon1.Text = "Open HEV MQTT SEVER";
             this.notifyIcon1.Visible = true;
             this.notifyIcon1.MouseDoubleClick += new System.Windows.Forms.MouseEventHandler(this.notifyIcon1_MouseDoubleClick);
             // 
-            // btnExit
+            // backgroundWorker2
             // 
-            this.btnExit.Font = new System.Drawing.Font("Consolas", 11.14286F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnExit.Location = new System.Drawing.Point(23, 320);
-            this.btnExit.Margin = new System.Windows.Forms.Padding(3, 20, 3, 3);
-            this.btnExit.Name = "btnExit";
-            this.btnExit.Size = new System.Drawing.Size(327, 42);
-            this.btnExit.TabIndex = 9;
-            this.btnExit.Text = "Close App";
-            this.btnExit.ThemeName = "TelerikMetroBlue";
-            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
+            this.backgroundWorker2.DoWork += new System.ComponentModel.DoWorkEventHandler(this.backgroundWorker2_DoWork);
             // 
-            // frmAgentScrew
+            // frmMqttServer
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(833, 666);
+            this.ClientSize = new System.Drawing.Size(1023, 824);
             this.Controls.Add(this.radPageView1);
             this.Controls.Add(this.radWaitingBar1);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.MaximizeBox = false;
-            this.Name = "frmAgentScrew";
+            this.Name = "frmMqttServer";
             // 
             // 
             // 
             this.RootElement.ApplyShapeToControl = true;
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
-            this.Text = "HEV Agent For Screw";
-            this.ThemeName = "TelerikMetroBlue";
+            this.Text = "HEV MQTT SERVER";
+            this.ThemeName = "VisualStudio2012Light";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.frmAgentScrew_FormClosing);
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.frmAgentScrew_FormClosed);
             this.Load += new System.EventHandler(this.frmAgentScrew_Load);
@@ -361,9 +372,8 @@
             ((System.ComponentModel.ISupportInitialize)(this.radLabel4)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.txtPass)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.btnSave)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.radWaitingBar1)).EndInit();
-            ((System.ComponentModel.ISupportInitialize)(this.fileSystemWatcher1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.btnExit)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.radWaitingBar1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this)).EndInit();
             this.ResumeLayout(false);
 
@@ -380,7 +390,6 @@
         private Telerik.WinControls.UI.WaitingBarIndicatorElement waitingBarIndicatorElement1;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Panel panel2;
-        private System.IO.FileSystemWatcher fileSystemWatcher1;
         private System.ComponentModel.BackgroundWorker backgroundWorker1;
         private Telerik.WinControls.Themes.VisualStudio2012LightTheme visualStudio2012LightTheme1;
         private Telerik.WinControls.UI.RadGridView radGridView1;
@@ -396,5 +405,7 @@
         private Telerik.WinControls.UI.RadButton btnSave;
         private System.Windows.Forms.NotifyIcon notifyIcon1;
         private Telerik.WinControls.UI.RadButton btnExit;
+        private System.Windows.Forms.ListBox listBox2;
+        private System.ComponentModel.BackgroundWorker backgroundWorker2;
     }
 }

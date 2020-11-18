@@ -20,15 +20,20 @@ using Microsoft.Win32;
 using Newtonsoft.Json;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Web.UI.WebControls;
+using System.Data.SqlClient;
+using System.Data.Common;
 
 namespace HEV_Agent_V2
 {
-    public partial class frmAgentScrew : Telerik.WinControls.UI.RadForm
+    public partial class frmMqttServer : Telerik.WinControls.UI.RadForm
     {
-       
+        SqlConnection conn = DBUtils.GetDBConnection();
+        SqlConnection conn2 = DBUtils.GetDBConnection();
+        string sql = "";
         DataSet DtSet;
         DataTable TbMachine;
-        private static readonly ILog log = LogManager.GetLogger(typeof(frmAgentScrew));
+        private static readonly ILog log = LogManager.GetLogger(typeof(frmMqttServer));
         MqttClient client = null;
         string clientId = "";
         bool active = true;
@@ -38,7 +43,7 @@ namespace HEV_Agent_V2
         string ServerIp = "";
         string Note = "";string Ip = "1.1.1.2";
 
-        public frmAgentScrew()
+        public frmMqttServer()
         {
 
             LogsPath = Properties.Settings.Default.LogPath;
@@ -51,11 +56,10 @@ namespace HEV_Agent_V2
             TbMachine = DtSet.Tables.Add("Lineeee");
             InitializeComponent();
             BasicConfigurator.Configure();
-            client = new MqttClient(IPAddress.Parse(ServerIp));
+            client = new MqttClient("127.0.0.1");
             client.MqttMsgPublishReceived += client_MqttMsgPublishReceived;
             client.MqttMsgPublished += client_MqttMsgPublished;
             client.MqttMsgSubscribed += client_MqttMsgSubscribed;
-            client.MqttMsgUnsubscribed += client_MqttMsgUnsubscribed;
             client.ConnectionClosed += client_Dis;
             //  client.ConnectionClosed += ConnectionClosedEventHandler;
             //client.Connect
@@ -64,50 +68,202 @@ namespace HEV_Agent_V2
             TbMachine = DtSet.Tables.Add("Machine");
                  
             TbMachine.Columns.Add("LastTime", typeof(System.String));
-            TbMachine.Columns.Add("Name", typeof(System.String));
+            TbMachine.Columns.Add("Name-IP", typeof(System.String));
             TbMachine.Columns.Add("Status", typeof(System.Int32));
             TbMachine.Columns.Add("ErrorCode", typeof(System.String));
+            TbMachine.Columns.Add("Change", typeof(System.String));
             TbMachine.Columns.Add("Note", typeof(System.String));
-            TbMachine.Columns.Add("Ip", typeof(System.String));
+            TbMachine.Columns.Add("InDB", typeof(System.String));
+
 
             radGridView1.DataSource = TbMachine;
             this.radGridView1.MasterTemplate.Columns[0].Width = 150;
-            this.radGridView1.MasterTemplate.Columns[1].Width = 120;
+            this.radGridView1.MasterTemplate.Columns[1].Width = 150;
             this.radGridView1.MasterTemplate.Columns[2].Width = 100;
             this.radGridView1.MasterTemplate.Columns[3].Width = 120;
             this.radGridView1.MasterTemplate.Columns[4].Width = 120;
             this.radGridView1.MasterTemplate.Columns[5].Width = 120;
+            this.radGridView1.MasterTemplate.Columns[6].Width = 120;
 
 
-            this.radGridView1.TableElement.RowHeight = 30;
+            this.radGridView1.TableElement.RowHeight = 25;
             this.radGridView1.TableElement.TableHeaderHeight = 40;
 
-            try 
+            try
             {
                 Ip = GetLocalIPAddress();
             }
             catch { }
 
             //Khởi động cùng windows
-            HevAgent.DeleteValue("HEV_Agent", false);
-            HevAgent.SetValue("HEV_Agent", Application.ExecutablePath);
+            HevAgent.DeleteValue("HEV_Mqtt_Server", false);
+            HevAgent.SetValue("HEV_Mqtt_Server", Application.ExecutablePath);
 
             txtLogPath.Text = LogsPath;
             txtServer.Text = ServerIp;
             txtNote.Text = Note;
 
-
-            //Lấy setting
-            //Ẩn vẫn chạy
-
+        }
+        
 
 
-            //Build json gửi lên server
-            //Nếu server gọi thì trả lời
+
+        //Nhận tin nhắn, Xử lý dữ liệu nhận được ở đây
+        private void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
+        {
+            //Nếu nhiều quá xoá đi, giữ cỡ 500 bản ghi thôi
+            if (TbMachine.Rows.Count > 500)
+                TbMachine.Clear();
+
+            try
+            {
+                string result = System.Text.Encoding.UTF8.GetString(e.Message);
+
+                if (result != "")
+                {
+
+                    //Xử lý dữ liệu nhận được ở đây
+                    var eqm = Eqm.FromJson(result);
+                    foreach(var machine in eqm)
+                    {
+
+                        //Tách lấy ip và name để định danh
+                        //Tách lấy dữ liệu
+                        string diachi2 = machine.Name + "-" + machine.Ip;
+                        diachi2 = diachi2.ToLower().Trim();
+                        int trangthai = machine.Status;
+                        string ErrorCode = machine.ErrorCode.Trim();
+                       
+                        this.radGridView1.Invoke(new MethodInvoker(() => {
+                            this.radGridView1.BeginUpdate();
+
+                        }));
 
 
+                        var hang = TbMachine.NewRow();
+                        hang["LastTime"] = machine.LastTime;
+                        hang["Name-IP"] = diachi2;
+                        hang["Status"] = trangthai.ToString();
+                        hang["ErrorCode"] = ErrorCode;
+                        hang["Note"] = machine.Note;
+                        hang["InDB"] = "YES";
+                        hang["Change"] = "YES";
+
+
+                        //Truy xuất vào cơ sở dữ liệu, xem trạng thái đưa lên có # vs trong csdl không?
+                        //Nếu khác thì insert log + update where address=idđ;;;;;
+                        string sql_get_stt = "SELECT TOP 1 [TrangThai],[PointId],[Ten],[Process] FROM [hev].[dbo].[Points] WHERE DiaChi2='" + diachi2+"'";
+                        // Debug.WriteLine(sql_get_stt);
+
+                        try
+                        {
+                            DbDataReader kq = mysql(sql_get_stt);
+   
+                            if (kq.HasRows)
+                            {
+                                int old_stt = 0;
+                                int PointPoint = 0;
+                                string eqm_name = "";
+                                string Process = "";
+                               
+
+                                while (kq.Read())
+                                {
+                                    old_stt = Int16.Parse(kq.GetValue(0).ToString());
+                                    PointPoint = Int16.Parse(kq.GetValue(1).ToString());
+                                    eqm_name = kq.GetValue(2).ToString();
+                                    Process= kq.GetValue(3).ToString();
+                                   // Debug.WriteLine(eqm_name);
+
+                                }
+                                conn.Close();
+
+                                if (trangthai != old_stt)
+                                {
+                                    // update đi cưng
+                                    //
+                                    string SqlInsert = "";
+                                    string SqlUpdate = "UPDATE Points SET ThoiGian2=(getdate()), TrangThai = " + trangthai + ",ErrorCode='"+ ErrorCode+"' WHERE [PointId]=" + PointPoint;
+
+                                    if (trangthai == 1)
+                                        SqlInsert = "; INSERT INTO [dbo].[Logs] ([TrangThai] ,[PointId]) VALUES (" + trangthai + "," + PointPoint + ")";
+                                    else
+                                        SqlInsert = "; INSERT INTO [dbo].[Logs] ([TrangThai] ,[PointId],[ErrorCode],[Process]) VALUES (" + trangthai + "," + PointPoint + ",'" + ErrorCode + "','" + Process + "')";
+
+
+                                    Debug.WriteLine(SqlUpdate);
+                                    Debug.WriteLine(SqlInsert);
+                                    //inseert
+
+
+                                    conn2.Open();
+                                    SqlCommand cmd2 = conn2.CreateCommand();
+                                    cmd2.CommandText = SqlUpdate + SqlInsert;
+                                    cmd2.ExecuteNonQuery();
+                                   // listBox2.Invoke(new MethodInvoker(() => { listBox2.Items.Add(DateTime.Now.ToString() + " === " + eqm_name + " - ID: " + diachi2 + " ==== Changed from " + old_stt + " to " + trangthai); }));
+                                    conn2.Close();
+                                }
+                                else
+                                    //listBox2.Invoke(new MethodInvoker(() => { listBox2.Items.Add(DateTime.Now.ToString() + " === " + eqm_name + " - ID: " + diachi2 + " ==== No change"); }));
+                                    hang["Change"] = "NO";
+
+                            }
+                            else
+                            {
+                              // listBox2.Invoke(new MethodInvoker(() => { listBox2.Items.Add(DateTime.Now.ToString() + " === EQM at: " + diachi2 + ". == Note: " + machine.Note+" == 404"); }));
+                                hang["InDB"] = "NO NO NO NO NO";
+                                hang["Change"] = "===";
+                                conn.Close(); 
+                            }
+                            TbMachine.Rows.Add(hang);
+
+                        }
+
+                        catch (Exception ex)
+                        {
+                            Debug.WriteLine("C254. Lỗi khi cập nhật trạng thái point: " + ex.ToString());
+                            log.Error("C180. Loi khi cap nhat vao csdl");
+
+                        }
+
+                        this.radGridView1.Invoke(new MethodInvoker(() => {
+                            this.radGridView1.EndUpdate();
+                            this.radGridView1.TableElement.ScrollToRow(radGridView1.Rows.Last());
+
+                        }));
+
+
+
+
+                    }
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                log.Error("C252. Loi khi nhan du lieu: "+ex);
+            }
         }
 
+
+        //Non q
+        private int SqlNonQuery(string sqlcmd)
+        {
+            conn2.Open();
+            SqlCommand cmd = new SqlCommand(sqlcmd, conn);
+            int kq = cmd.ExecuteNonQuery();
+            conn2.Close();
+            return kq;
+        }
+        private DbDataReader mysql(string sqlcmd)
+        {
+            conn.Open();
+            SqlCommand cmd = new SqlCommand(sqlcmd, conn);
+            DbDataReader ketqua = cmd.ExecuteReader();
+            return ketqua;
+
+        }
 
         //PhanTich
         private void PhanTich(string FileName)
@@ -229,25 +385,43 @@ namespace HEV_Agent_V2
             {
                 cell.Font = pop;
                 cell.ForeColor = Color.Black;
+                cell.BackColor = Color.AliceBlue;
 
             }
 
-            if (e.CellElement.Text == "0")
-                e.CellElement.Text = "NG";
-            if (e.CellElement.Text == "1")
-                e.CellElement.Text = "OK";
-            if (e.CellElement.Text == "2")
-                e.CellElement.Text = "OFF";
-            if (e.CellElement.Text == "3")
-                e.CellElement.Text = "WAIT";
-        }
+            if (e.CellElement.ColumnIndex == 2) { 
+                if (e.CellElement.Text == "0") { 
+                    e.CellElement.Text = ""; 
+                    e.CellElement.BackColor = Color.Red;
+                    e.CellElement.TextAlignment = ContentAlignment.MiddleCenter;
+
+                }
+
+                if (e.CellElement.Text == "1") { 
+                    e.CellElement.Text = "";
+                    e.CellElement.BackColor = Color.LimeGreen;
+                    e.CellElement.TextAlignment= ContentAlignment.MiddleCenter;
+                }
+
+                if (e.CellElement.Text == "2") {
+                    e.CellElement.Text = "";  e.CellElement.BackColor = Color.Gray;
+                    e.CellElement.TextAlignment = ContentAlignment.MiddleCenter;
+                }
+
+                if (e.CellElement.Text == "3")
+                    e.CellElement.Text = "";
+            }
+
+            
+
+            }
 
         private void frmAgentScrew_Load(object sender, EventArgs e)
         {
             //Khi khởi động lên, cố gắng kết nối tới server
             try
             {
-                fileSystemWatcher1.Path = LogsPath;
+                backgroundWorker1.RunWorkerAsync();
             }
 
             catch (Exception ex)
@@ -255,39 +429,9 @@ namespace HEV_Agent_V2
                 log.Error(ex);
             }
 
-
-            backgroundWorker1.RunWorkerAsync();
-
         }
 
-        //Nhận tin nhắn
-        private void client_MqttMsgPublishReceived(object sender, MqttMsgPublishEventArgs e)
-        {
-            //Nhận
-            try { 
-            string result = System.Text.Encoding.UTF8.GetString(e.Message);
 
-            if (result == "report")
-            {
-
-                string data = TbToJson(TbMachine);
-                client.Publish("hev", Encoding.UTF8.GetBytes(data), MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE, false);
-            }
-
-            }
-            catch (Exception ex)
-            {
-                log.Error("C252. Loi phan nhan LoaLoa");
-            }
-            //string abc = "[{\"LastTime\":\"" + d + "\",\"Name\":\"" + Ten + "\",\"Status\":" + stt + ",\"ErrorCode\":\"" + Code + "\",\"Note\":\"" + Note + "\"}}]";
-
-
-        }
-
-        private void client_MqttMsgUnsubscribed(object sender, MqttMsgUnsubscribedEventArgs e)
-        {
-            // write your code
-        }
 
        //Sub rồi
         private void client_MqttMsgSubscribed(object sender, MqttMsgSubscribedEventArgs e)
@@ -302,9 +446,7 @@ namespace HEV_Agent_V2
             Console.WriteLine("Published: "+e.MessageId);
 
         }
-      
-        
-        
+           
         //Nếu ngắt kết nối thì sao?
         void client_Dis(object sender, EventArgs e)
         {
@@ -384,12 +526,12 @@ namespace HEV_Agent_V2
                         if (client.IsConnected)
                         {
                             Debug.WriteLine("Connected to Server");
-                            this.radWaitingBar1.Invoke(new MethodInvoker(() => { this.radWaitingBar1.StartWaiting(); this.radWaitingBar1.Text = "Connected to Server. Monitoring....."; this.radWaitingBar1.ForeColor = Color.Blue; }));
+                            this.radWaitingBar1.Invoke(new MethodInvoker(() => { this.radWaitingBar1.StartWaiting(); this.radWaitingBar1.Text = "Connected. Tracking now....."; this.radWaitingBar1.ForeColor = Color.Blue; }));
 
                         }
 
-
-                        string[] topic = { "loaloa" };
+                        //Sub vào kênh này để xem thông tin
+                        string[] topic = { "hev" };
                         client.Subscribe(topic, new byte[] { MqttMsgBase.QOS_LEVEL_EXACTLY_ONCE });
                     }
                     catch
@@ -470,6 +612,16 @@ namespace HEV_Agent_V2
 
             else
                 MessageBox.Show("Sai Pass");
+        }
+
+        private void radPageView1_SelectedPageChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        private void backgroundWorker2_DoWork(object sender, DoWorkEventArgs e)
+        {
+
         }
     }
 }

@@ -10,7 +10,7 @@
     <OutputType>WinExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>HEV_Agent_V2</RootNamespace>
-    <AssemblyName>HEV_Agent_V2</AssemblyName>
+    <AssemblyName>HEV_MQTT_SERVER</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,6 +32,10 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup>
+    <ApplicationIcon>server.ico</ApplicationIcon>
   </PropertyGroup>
   <PropertyGroup>
     <ApplicationManifest>app.manifest</ApplicationManifest>
@@ -78,14 +82,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="frmAgentScrew.cs">
+    <Compile Include="DBSQLServerUtils.cs" />
+    <Compile Include="DBUtils.cs" />
+    <Compile Include="Eqm.cs" />
+    <Compile Include="frmMqttServer.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="frmAgentScrew.Designer.cs">
-      <DependentUpon>frmAgentScrew.cs</DependentUpon>
+    <Compile Include="frmMqttServer.Designer.cs">
+      <DependentUpon>frmMqttServer.cs</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="frmAgentScrew.resx">
-      <DependentUpon>frmAgentScrew.cs</DependentUpon>
+    <EmbeddedResource Include="frmMqttServer.resx">
+      <DependentUpon>frmMqttServer.cs</DependentUpon>
     </EmbeddedResource>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -115,7 +122,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <!--sirinie -->
+    <Content Include="server.ico" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <ProjectExtensions>
